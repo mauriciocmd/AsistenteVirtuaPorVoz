@@ -1,3 +1,5 @@
+# asistente.py
+
 from threading import Event
 from reconocimientovoz import ReconocimientoVoz
 from acciones import Acciones
@@ -56,8 +58,20 @@ class AsistenteVoz:
             self.en_chatgpt = False
         elif "abrir pdf" in comando:  # Añadir el comando para abrir PDF
             LecturaPDF.abrir_pdf_desde_descargas()
+        elif "listar archivos" in comando:
+            LecturaPDF.listar_archivos()
+        elif "alto listado" in comando:
+            LecturaPDF.detener_listado()
+        elif comando.startswith("abrir archivo "):
+            nombre = comando.replace("abrir archivo ", "")
+            LecturaPDF.abrir_archivo_por_nombre(nombre)
         elif "leer pdf" in comando:
             LecturaPDF.simular_teclas_leer_pdf()
+        elif "abrir último archivo listado" in comando:  # Nuevo comando para abrir el último archivo listado
+            if LecturaPDF.ultimo_archivo_listado:
+                LecturaPDF.abrir_archivo_por_nombre(LecturaPDF.ultimo_archivo_listado)
+            else:
+                print("No hay ningún archivo listado para abrir.")
         elif "cerrar asistente virtual" in comando:
             self.detener_evento.set()
             Acciones.cerrar_asistente()
