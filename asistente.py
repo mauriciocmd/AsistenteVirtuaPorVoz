@@ -4,7 +4,7 @@ from threading import Event
 from reconocimientovoz import ReconocimientoVoz
 from acciones import Acciones
 from pagegpt import PageChatGPT
-from lecturapdf import LecturaPDF  # Importar LecturaPDF
+from lecturapdf import LecturaPDF  
 import time
 import pyautogui  # Asegúrate de tener esta librería instalada
 import os

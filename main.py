@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 from threading import Thread
-from asistente import AsistenteVoz  # Asegúrate de importar AsistenteVoz desde asistente.py
+from asistente import AsistenteVoz 
 import sys
 
 class AplicacionAsistente:
