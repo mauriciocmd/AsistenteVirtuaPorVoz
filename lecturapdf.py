@@ -5,7 +5,7 @@ import webbrowser
 import pyttsx3
 import time
 import threading
-import keyboard  # Asegúrate de que esto esté aquí
+import keyboard
 
 class LecturaPDF:
     listado_activo = False
@@ -85,7 +85,7 @@ class LecturaPDF:
     @staticmethod
     def simular_teclas_leer_pdf():
         keyboard.press_and_release('ctrl+shift+u')
-        print("Simulación de teclas Ctrl + Shift + U realizada.")
+        print("Lectura de página activada.")
 
     @staticmethod
     def abrir_archivo_por_nombre(nombre):

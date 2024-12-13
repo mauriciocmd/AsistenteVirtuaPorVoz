@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import easyocr # type: ignore
 import pygetwindow as gw
+import keyboard
 
 class PageTeams:
     def __init__(self, engine):
@@ -50,7 +51,7 @@ class PageTeams:
                     print(f"Categoría {categoria} seleccionada. Leyendo tareas.")
                     self.leer_tareas_listadas()
 
-    def leer_tareas_listadas(self):
+    """ def leer_tareas_listadas(self):
         screenshot = pyautogui.screenshot()
         resultado = self.reader.readtext(np.array(screenshot))
         texto_detectado = " ".join([r[1] for r in resultado])
@@ -62,7 +63,11 @@ class PageTeams:
         else:
             print("No se detectó texto en la pantalla.")
             self.engine.say("No se detectó texto en la pantalla.")
-            self.engine.runAndWait()
+            self.engine.runAndWait() """
+    @staticmethod
+    def leer_tareas_listadas():
+        keyboard.press_and_release('ctrl+shift+u')
+        print("Lectura de página activada.")
 
     def ejecutar_comando(self, comando):
         if comando == "leer tareas próximas":

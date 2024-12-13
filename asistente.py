@@ -14,6 +14,7 @@ from reconocimiento_intenciones import ReconocimientoIntenciones
 from pageteams import PageTeams  # Asegúrate de importar la clase PageTeams
 import herramientas_sistema
 import clicar
+from control_teams import ControlTeams
 
 
 
@@ -34,6 +35,8 @@ class AsistenteVoz:
 
         # Crear instancia de PageTeams y pasarle el motor de voz
         self.page_teams = PageTeams(self.engine)
+        
+        self.control_teams = ControlTeams(self.engine)
 
     def activar_comandos(self):
         while not self.detener_evento.is_set():
@@ -98,6 +101,11 @@ class AsistenteVoz:
             herramientas_sistema.procesar_comando_volumen(comando)
         elif comando.startswith("clicar "):
             clicar.procesar_comando_clicar(comando)
+        elif comando.startswith("ir a conversación con"):
+            nombre_contacto = comando.replace("ir a conversación con ", "").strip()
+            self.control_teams.ir_a_conversacion(nombre_contacto)
+        elif comando == "enviar archivo en conversación":
+            control_teams.enviar_archivo_conversacion()
         elif "cerrar asistente virtual" in comando:
             self.detener_evento.set()
             Acciones.cerrar_asistente()

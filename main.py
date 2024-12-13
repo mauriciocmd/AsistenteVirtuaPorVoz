@@ -7,6 +7,9 @@ import sys
 from BD_intenciones import BaseDatosIntenciones  # importar la clase de la base de datos
 
 class AplicacionAsistente:
+    
+    
+        
     def __init__(self, root):
         self.ventana = root
         self.ventana.title("Asistente de Voz")
@@ -44,11 +47,11 @@ class AplicacionAsistente:
         boton_texto = "#FFFFFF"
 
         botones = [
-            ("Leer Texto", self.funcion_boton_1),
-            ("Dictar Texto", self.funcion_boton_2),
-            ("Buscar Información", self.funcion_boton_3),
-            ("Leer Documento", self.funcion_boton_4),
-            ("Leer Texto en Línea", self.funcion_boton_5),
+            ("Empezar dictado", self.funcion_boton_2),
+            ("Terminar dictado", self.funcion_boton_3),
+            ("Listar archivos", self.funcion_boton_1),
+            ("Alto listado", lambda: self.asistente.procesar_comando("alto listado")),
+            ("Abrir último documento listado", self.funcion_boton_4),
         ]
 
         for i, (texto, comando) in enumerate(botones):
@@ -151,19 +154,16 @@ class AplicacionAsistente:
 
     # Métodos para botones
     def funcion_boton_1(self):
-        print("Botón 1 presionado")
+        self.asistente.procesar_comando("listar archivos")
 
     def funcion_boton_2(self):
-        print("Botón 2 presionado")
+        self.asistente.procesar_comando("empezar dictado")
 
     def funcion_boton_3(self):
-        print("Botón 3 presionado")
+        self.asistente.procesar_comando("terminar dictado")
 
     def funcion_boton_4(self):
-        print("Botón 4 presionado")
-
-    def funcion_boton_5(self):
-        print("Botón 5 presionado")
+        self.asistente.procesar_comando("abrir último archivo listado")
 
 class RedirectOutput:
     """Clase para redirigir stdout y stderr al Label."""
