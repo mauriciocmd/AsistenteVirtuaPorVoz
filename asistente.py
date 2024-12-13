@@ -1,57 +1,72 @@
 # asistente.py
-
+import pyttsx3
 from threading import Event
 from reconocimientovoz import ReconocimientoVoz
 from acciones import Acciones
 from pagegpt import PageChatGPT
-from lecturapdf import LecturaPDF  
+from lecturapdf import LecturaPDF
 import time
-import pyautogui  # Asegúrate de tener esta librería instalada
+import pyautogui
 import os
 import cv2
 import numpy as np
+from reconocimiento_intenciones import ReconocimientoIntenciones
+from pageteams import PageTeams  # Asegúrate de importar la clase PageTeams
 
 class AsistenteVoz:
-    def __init__(self, logger, cerrar_app_callback):
+    def __init__(self, logger, cerrar_app_callback, db_path='intenciones.db'):
         self.detener_evento = Event()
         self.reconocedor = ReconocimientoVoz()
         self.logger = logger
         self.cerrar_app_callback = cerrar_app_callback
-        self.dictado_activo = False  # Inicialmente en False
+        self.dictado_activo = False
         self.en_chatgpt = False
+
+        # Crear instancia de Reconocimiento de Intenciones con los datos de la BD
+        self.reconocimiento_intenciones = ReconocimientoIntenciones(db_path)
+
+        # Inicializar el motor de voz (pyttsx3)
+        self.engine = pyttsx3.init()
+
+        # Crear instancia de PageTeams y pasarle el motor de voz
+        self.page_teams = PageTeams(self.engine)
 
     def activar_comandos(self):
         while not self.detener_evento.is_set():
-            comando = self.reconocedor.reconocer_voz()
-            
-            if self.dictado_activo:
-                # Si el dictado está activo, procesamos solo el dictado
-                self.procesar_dictado_texto(comando)
-            else:
-                # Si el dictado no está activo, procesamos solo comandos
-                self.procesar_comando(comando)
-
+            try:
+                comando = self.reconocedor.reconocer_voz()
+                
+                if self.dictado_activo:
+                    # Si el dictado está activo, procesamos el comando solo si es texto o 'terminar dictado'
+                    self.procesar_dictado_texto(comando)
+                else:
+                    # Procesar la intención del comando
+                    self.procesar_comando(comando)
+                    
+            except Exception as e:
+                print(f"Error al reconocer voz: {e}")
+        
         self.logger("Asistente de Voz detenido.")
 
     def procesar_dictado_texto(self, comando):
-        """Procesa el texto dictado cuando el dictado está activo."""
         if comando.strip() == "terminar dictado":
             self.terminar_dictado()
-        elif comando:  # Solo escribir si comando no está vacío
-            Acciones.escribir_texto(comando + " ")
+        elif comando:
+            Acciones.escribir_texto(f"{comando} ")
 
     def procesar_comando(self, comando):
-        """Procesa los comandos cuando el dictado está desactivado."""
+        # Usar el modelo entrenado para predecir la intención del comando
+        intencion = self.reconocimiento_intenciones.predecir_intencion(comando.lower())
+        
+        # Acciones en función de la intención predicha
         if "empezar dictado" in comando:
             self.empezar_dictado()
         elif "abrir word" in comando:
             Acciones.abrir_word()
         elif comando.startswith("guardar documento word "):
-            nombre_archivo = comando.replace("guardar documento word ", "")
-            self.guardar_documento_word(nombre_archivo)
+            self.guardar_documento_word(comando.replace("guardar documento word ", ""))
         elif comando.lower().startswith("guardar documento pdf "):
-            nombre_archivo = comando.replace("guardar documento pdf ", "")
-            self.guardar_documento_pdf(nombre_archivo)
+            self.guardar_documento_pdf(comando.replace("guardar documento pdf ", ""))
         elif "abrir excel" in comando:
             Acciones.abrir_excel()
         elif "abrir powerpoint" in comando:
@@ -59,59 +74,65 @@ class AsistenteVoz:
         elif "abrir navegador" in comando:
             Acciones.abrir_navegador()
         elif "abrir chat gpt" in comando:
-            Acciones.abrir_chatgpt()
-            self.en_chatgpt = True
-            time.sleep(5)  # Esperar a que se abra ChatGPT
-            PageChatGPT.activar_campo_busqueda()
+            self.abrir_chatgpt()
         elif "abrir teams" in comando:
             Acciones.abrir_teams()
             self.en_chatgpt = False
-        elif "abrir pdf" in comando:  # Añadir el comando para abrir PDF
+        elif "abrir pdf" in comando:
             LecturaPDF.abrir_pdf_desde_descargas()
         elif "listar archivos" in comando:
             LecturaPDF.listar_archivos()
         elif "alto listado" in comando:
             LecturaPDF.detener_listado()
         elif comando.startswith("abrir archivo "):
-            nombre = comando.replace("abrir archivo ", "")
-            LecturaPDF.abrir_archivo_por_nombre(nombre)
+            LecturaPDF.abrir_archivo_por_nombre(comando.replace("abrir archivo ", ""))
         elif "leer pdf" in comando:
             LecturaPDF.simular_teclas_leer_pdf()
-        elif "abrir último archivo listado" in comando:  # Nuevo comando para abrir el último archivo listado
-            if LecturaPDF.ultimo_archivo_listado:
-                LecturaPDF.abrir_archivo_por_nombre(LecturaPDF.ultimo_archivo_listado)
-            else:
-                print("No hay ningún archivo listado para abrir.")
+        elif "abrir último archivo listado" in comando:
+            self.abrir_ultimo_archivo_listado()
         elif "cerrar asistente virtual" in comando:
             self.detener_evento.set()
             Acciones.cerrar_asistente()
             self.cerrar_app_callback()
+        # Nuevos comandos para Teams
+        elif "leer tareas próximas" in comando:
+            self.page_teams.ejecutar_comando("leer tareas próximas")
+        elif "leer tareas vencidas" in comando:
+            self.page_teams.ejecutar_comando("leer tareas vencidas")
+        elif "leer tareas completadas" in comando:
+            self.page_teams.ejecutar_comando("leer tareas completadas")
         else:
             print(f"Comando no reconocido: {comando}")
 
+
     def empezar_dictado(self):
-        """Activa el modo dictado."""    
-        self.dictado_activo = True
-        Acciones.empezar_dictado()
-        print("Dictado iniciado. Di 'terminar dictado' para finalizar.")
+        if not self.dictado_activo:
+            self.dictado_activo = True
+            Acciones.empezar_dictado()
+            print("Dictado iniciado. Di 'terminar dictado' para finalizar.")
+        else:
+            print("El dictado ya está activo.")
 
     def terminar_dictado(self):
-        """Desactiva el modo dictado y vuelve al modo de comando."""    
-        self.dictado_activo = False
-        Acciones.terminar_dictado()
-        print("Dictado terminado.")
+        if self.dictado_activo:
+            self.dictado_activo = False
+            Acciones.terminar_dictado()
+            print("Dictado terminado.")
+        else:
+            print("No hay dictado activo para terminar.")
 
-    def empezar_busqueda_chatgpt(self):
-        """Activa el campo de búsqueda en ChatGPT para comenzar a dictar una consulta."""    
-        if self.en_chatgpt:
-            PageChatGPT.activar_campo_busqueda()
-            print("Activando búsqueda en ChatGPT. Empieza a dictar la consulta.")
 
-    def enviar_busqueda_chatgpt(self):
-        """Envía la búsqueda en ChatGPT basada en el dictado actual."""    
-        if self.en_chatgpt:
-            consulta = self.reconocedor.empezar_dictado()
-            PageChatGPT.buscar_en_chatgpt(consulta)
+    def abrir_chatgpt(self):
+        Acciones.abrir_chatgpt()
+        self.en_chatgpt = True
+        time.sleep(5)
+        PageChatGPT.activar_campo_busqueda()
+
+    def abrir_ultimo_archivo_listado(self):
+        if LecturaPDF.ultimo_archivo_listado:
+            LecturaPDF.abrir_archivo_por_nombre(LecturaPDF.ultimo_archivo_listado)
+        else:
+            print("No hay ningún archivo listado para abrir.")
 
     def guardar_documento_word(self, nombre_archivo):
         try:

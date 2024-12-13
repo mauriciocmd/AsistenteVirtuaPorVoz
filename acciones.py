@@ -56,26 +56,38 @@ class Acciones:
 
     @staticmethod
     def empezar_dictado():
-        Acciones.dictando = True
-        print("Dictado iniciado. Di 'terminar dictado' para finalizar.")
+        """Inicia el dictado y maneja el estado global"""
+        if not Acciones.dictando:
+            Acciones.dictando = True
+            print("Dictado iniciado. Di 'terminar dictado' para finalizar.")
+        else:
+            print("El dictado ya está en curso. No se puede iniciar de nuevo.")
 
     @staticmethod
     def terminar_dictado():
-        Acciones.dictando = False
-        print("Dictado terminado.")
+        """Finaliza el dictado y maneja el estado global"""
+        if Acciones.dictando:
+            Acciones.dictando = False
+            print("Dictado terminado.")
+        else:
+            print("No hay dictado activo para finalizar.")
 
     @staticmethod
     def escribir_texto(texto):
         """
-        Escribe el texto en el campo activo usando la librería keyboard.
+        Escribe el texto en el campo activo utilizando la librería keyboard.
         Verifica si el dictado está activo antes de escribir.
         """
         try:
-            if Acciones.dictando and texto.strip().lower() != "terminar dictado":
-                print(f"Escribiendo texto: {texto}")
-                keyboard.write(texto)
+            if Acciones.dictando:
+                if texto.strip().lower() != "terminar dictado":
+                    print(f"Escribiendo texto: {texto}")
+                    keyboard.write(texto)
+                else:
+                    print("Comando de finalizar dictado recibido.")
+                    Acciones.terminar_dictado()
             else:
-                print("Dictado no está activo o se recibió el comando de finalizar.")
+                print("El dictado no está activo. Ignorando el texto.")
         except Exception as e:
             print(f"Error al escribir el texto: {e}")
 
