@@ -13,6 +13,8 @@ import numpy as np
 from reconocimiento_intenciones import ReconocimientoIntenciones
 from pageteams import PageTeams  # Asegúrate de importar la clase PageTeams
 import herramientas_sistema
+import clicar
+
 
 
 class AsistenteVoz:
@@ -94,6 +96,8 @@ class AsistenteVoz:
             self.abrir_ultimo_archivo_listado()
         elif "cambiar volumen" in comando:
             herramientas_sistema.procesar_comando_volumen(comando)
+        elif comando.startswith("clicar "):
+            clicar.procesar_comando_clicar(comando)
         elif "cerrar asistente virtual" in comando:
             self.detener_evento.set()
             Acciones.cerrar_asistente()
