@@ -12,6 +12,8 @@ import cv2
 import numpy as np
 from reconocimiento_intenciones import ReconocimientoIntenciones
 from pageteams import PageTeams  # Asegúrate de importar la clase PageTeams
+import herramientas_sistema
+
 
 class AsistenteVoz:
     def __init__(self, logger, cerrar_app_callback, db_path='intenciones.db'):
@@ -90,6 +92,8 @@ class AsistenteVoz:
             LecturaPDF.simular_teclas_leer_pdf()
         elif "abrir último archivo listado" in comando:
             self.abrir_ultimo_archivo_listado()
+        elif "cambiar volumen" in comando:
+            herramientas_sistema.procesar_comando_volumen(comando)
         elif "cerrar asistente virtual" in comando:
             self.detener_evento.set()
             Acciones.cerrar_asistente()
